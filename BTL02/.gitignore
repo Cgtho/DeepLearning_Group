@@ -1,0 +1,33 @@
+# Python cache and generated files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Generated datasets, models, and outputs
+*.csv
+*.h5
+*.keras
+*.pkl
+*.pickle
+*.joblib
+*.json
+*.log
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
