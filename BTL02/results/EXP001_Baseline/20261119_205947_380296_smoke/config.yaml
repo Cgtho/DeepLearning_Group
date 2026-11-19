@@ -1,0 +1,8 @@
+experiment: EXP001_Baseline
+data_dir: data
+output_dir: results
+epochs: 1
+batch_size: 64
+learning_rate: 0.001
+seed: 42
+device: auto

@@ -26,6 +26,11 @@ env/
 *.json
 *.log
 
+# Giữ lịch sử và số liệu đi cùng checkpoint của từng thí nghiệm.
+!results/**/history.csv
+!results/**/training.json
+!results/**/evaluation.json
+
 # IDE and OS files
 .vscode/
 .idea/
