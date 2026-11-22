@@ -11,7 +11,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 
 from fer_data import EMOTIONS, test_loader
 from models import build_model
-from training_utils import select_device
+from train import select_device
 from visualize import plot_results
 
 
