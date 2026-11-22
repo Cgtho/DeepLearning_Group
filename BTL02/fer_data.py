@@ -42,20 +42,33 @@ def split_train_valid(df):
     )
 
 
-def make_dataset(frame):
+def make_dataset(frame, transform=None):
     labels = frame["emotion"].to_numpy()
     if not np.isin(labels, np.arange(7)).all():
         raise ValueError("FER2013 yêu cầu nhãn số nguyên từ 0 đến 6.")
     images = load_images(frame).astype(np.float32)
     images /= 255.0
-    return EmotionDataset(images, labels)
+    return EmotionDataset(images, labels, transform=transform)
 
 
-def training_loaders(data_dir, batch_size, seed):
+def training_loaders(data_dir, batch_size, seed, augmentation=None):
+    augmentation = augmentation or {}
+    transform = None
+    if augmentation.get("enabled", False):
+        # Import lazily: baseline does not require torchvision.
+        from torchvision import transforms
+        flip = augmentation.get("horizontal_flip", 0.5)
+        degrees = augmentation.get("rotation_degrees", 10)
+        if not 0 <= flip <= 1 or degrees < 0:
+            raise ValueError("horizontal_flip phải trong [0,1], rotation_degrees >= 0.")
+        transform = transforms.Compose([
+            transforms.RandomHorizontalFlip(p=flip),
+            transforms.RandomRotation(degrees=degrees),
+        ])
     frame = pd.read_csv(data_dir / "train.csv")
     train_idx, valid_idx = split_train_valid(frame)
     generator = torch.Generator().manual_seed(seed)
-    train = DataLoader(make_dataset(frame.iloc[train_idx]), batch_size=batch_size,
+    train = DataLoader(make_dataset(frame.iloc[train_idx], transform=transform), batch_size=batch_size,
                        shuffle=True, generator=generator)
     valid = DataLoader(make_dataset(frame.iloc[valid_idx]), batch_size=batch_size)
     return train, valid

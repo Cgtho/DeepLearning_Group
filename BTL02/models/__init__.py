@@ -1,8 +1,7 @@
 from models.baseline_cnn import BaselineCNN
+from models.cnn_mlp import CNNMLP
 
-MODEL_REGISTRY = {
-    "baseline": BaselineCNN,
-}
+MODEL_REGISTRY = {"baseline": BaselineCNN, "cnn_mlp": CNNMLP}
 
 
 def build_model(name="baseline"):

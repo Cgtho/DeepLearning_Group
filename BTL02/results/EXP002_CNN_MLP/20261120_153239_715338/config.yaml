@@ -1,0 +1,24 @@
+experiment: EXP002_CNN_MLP
+model: cnn_mlp
+data_dir: C:\Users\PC\Music\fer
+output_dir: results
+tensorboard_dir: runs
+epochs: 30
+batch_size: 64
+optimizer: adam
+learning_rate: 0.001
+seed: 42
+device: auto
+augmentation:
+  enabled: false
+  horizontal_flip: 0.5
+  rotation_degrees: 10
+early_stopping:
+  enabled: false
+  patience: 5
+  min_delta: 0.0
+reduce_lr:
+  enabled: false
+  factor: 0.1
+  patience: 2
+  min_lr: 1.0e-06

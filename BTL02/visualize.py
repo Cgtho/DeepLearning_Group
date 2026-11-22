@@ -52,13 +52,22 @@ def plot_results(run, model, dataset, truth, predicted, result):
             ax.set_title(f"Thật: {EMOTIONS[truth[i]]}\nĐoán: {EMOTIONS[predicted[i]]}", fontsize=9)
         save_figure(fig, run, filename)
 
-    # 32 kernel của lớp đầu chỉ có một kênh, dùng chung thang màu đối xứng.
-    weights = model.features[0].weight.detach().cpu().numpy()[:, 0]
-    limit = np.abs(weights).max()
-    fig, axes = plt.subplots(4, 8, figsize=(9, 5))
-    fig.suptitle("32 bộ lọc 3 × 3 của lớp tích chập đầu tiên")
-    for i, (ax, kernel) in enumerate(zip(axes.flat, weights)):
-        ax.imshow(kernel, cmap="RdBu_r", vmin=-limit, vmax=limit, interpolation="nearest")
-        ax.set_title(str(i + 1), fontsize=8)
-        ax.axis("off")
-    save_figure(fig, run, "conv1_filters.png")
+    # First and last convolution, input-channel 0 slices; no channel averaging.
+    from torch import nn
+    convolutions = [layer for layer in model.modules() if isinstance(layer, nn.Conv2d)]
+    for layer, filename, title in [
+        (convolutions[0], "conv1_filters.png", "First convolution"),
+        (convolutions[-1], "last_conv_filters.png", "Last convolution"),
+    ]:
+        weights = layer.weight.detach().cpu().numpy()[:, 0]
+        limit = max(float(np.abs(weights).max()), 1e-12)
+        columns = 8
+        rows = (len(weights) + columns - 1) // columns
+        fig, axes = plt.subplots(rows, columns, figsize=(10, rows * 1.1), squeeze=False)
+        fig.suptitle(f"{title}: {len(weights)} kernels, input channel 0")
+        for ax in axes.flat:
+            ax.axis("off")
+        for i, (ax, kernel) in enumerate(zip(axes.flat, weights)):
+            ax.imshow(kernel, cmap="RdBu_r", vmin=-limit, vmax=limit, interpolation="nearest")
+            ax.set_title(str(i + 1), fontsize=8)
+        save_figure(fig, run, filename)

@@ -1,0 +1,16 @@
+{
+  "training_seconds": 2190.9803432,
+  "epochs_completed": 30,
+  "stopped_early": false,
+  "best_epoch": 15,
+  "best_val_loss": 1.1981438398361206,
+  "best_val_accuracy": 0.552943229675293,
+  "parameters": 5355015,
+  "model": "cnn_mlp",
+  "train_size": 22967,
+  "val_size": 5742,
+  "device": "cpu",
+  "torch": "2.15.0+cpu",
+  "hardware": "CPU",
+  "resumed": true
+}
