@@ -1,0 +1,39 @@
+BÁO CÁO CHUYỂN ĐỔI CNN + LSTM SANG PYTORCH
+
+CHUYỂN ĐỔI
+
+- Keras Conv2D NHWC được thay bằng torch.nn.Conv2d NCHW.
+- Keras TimeDistributed(Conv2D/Pool/Flatten) được thay bằng reshape
+  `(batch, time, channel, height, width)` thành
+  `(batch*time, channel, height, width)` trước khi chạy CNN.
+- Keras Conv2D, MaxPooling2D, Flatten, Dense và Dropout được thay bằng
+  torch.nn.Conv2d, torch.nn.MaxPool2d, torch.nn.Flatten,
+  torch.nn.Linear và torch.nn.Dropout.
+- Keras LSTM được thay bằng torch.nn.LSTM với batch_first=True.
+- Keras model.fit được thay bằng training loop:
+  model.train(), optimizer.zero_grad(), forward, backward và optimizer.step().
+- Keras model.evaluate được thay bằng model.eval() kết hợp torch.no_grad().
+- Keras mean_absolute_error được thay bằng torch.nn.L1Loss.
+- MNIST được chia cho 255 để chuẩn hóa pixel về `[0, 1]`.
+
+KIẾN TRÚC GIỮ NGUYÊN
+
+- Input: `(batch, 8, 1, 28, 28)`
+- Conv2d: 1 -> 64 -> 128 -> 256
+- MaxPool2d sau mỗi khối CNN
+- Flatten sau CNN: 256 x 3 x 3 = 2304
+- LSTM: 2304 -> 128
+- LSTM: 128 -> 128
+- Dropout: 0.2 cho CNN và 0.22 cho LSTM
+- Linear: 128 -> 1
+- Batch size: 128
+- SGD learning rate: 0.01
+
+CHẠY
+CHẠY
+
+Từ thư mục gốc repo:
+
+  python -m pip install tensorflow torch torchvision matplotlib numpy
+
+Mở notebook MNIST_CNN_LSTM.ipynb để chạy mã PyTorch.

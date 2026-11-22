@@ -1,0 +1,88 @@
+BÁO CÁO CHUYỂN ĐỔI MLP TỪ KERAS SANG PYTORCH
+
+CHUYỂN ĐỔI
+
+- Notebook Keras sử dụng NumPy array làm dữ liệu đầu vào; notebook PyTorch
+  chuyển dữ liệu sang torch.Tensor và torch.utils.data.TensorDataset/DataLoader.
+- Keras Dense(shape=(n,), activation='...') được thay bằng torch.nn.Linear
+  tương ứng với torch.nn.Sigmoid hoặc torch.nn.ReLU.
+- Keras Flatten được thay bằng torch.nn.Flatten.
+- Keras Dropout được thay bằng torch.nn.Dropout.
+- Keras Model được thay bằng class kế thừa torch.nn.Module và hàm forward
+  mô tả luồng truyền dữ liệu.
+- Keras model.fit được thay bằng training loop: model.train(), optimizer.zero_grad(),
+  forward, backward và optimizer.step().
+- Keras model.evaluate được thay bằng model.eval() kết hợp torch.no_grad().
+- MSELoss được dùng để xấp xỉ hàm Gauss và categorical_crossentropy được
+  thay bằng torch.nn.CrossEntropyLoss khi phân loại MNIST.
+- PyTorch model trả logits ở lớp đầu ra; nhãn MNIST là các số nguyên 0 đến 9
+  nên không cần one-hot.
+- ToTensor của torchvision chuẩn hóa pixel MNIST về [0, 1], tương đương cách
+  chia float32 cho 255 trong notebook Keras.
+- Keras SGD(lr=0.01) được thay bằng torch.optim.SGD(model.parameters(),
+  lr=0.01), giữ batch size 128.
+
+CHUYỂN ĐỔI MLP XẤP XỈ HÀM GAUSS
+
+- Keras Dense(2 -> B, sigmoid) được thay bằng
+  Linear(2, B) -> Sigmoid trong PyTorch.
+- Keras Dense(B -> 1, sigmoid) được thay bằng
+  Linear(B, 1) -> Sigmoid.
+- Keras mean_squared_error được thay bằng torch.nn.MSELoss.
+- Dữ liệu train/test NumPy được chuyển sang torch.Tensor float32.
+- Ba biểu đồ khảo sát vẫn giữ nguyên:
+  số mẫu train A, số nút ẩn B và số epoch C.
+- Các tham số thực nghiệm giữ như mẫu Keras:
+  learning rate 0.01, batch size 128, B trong khoảng 8 đến 512,
+  epoch trong khoảng 10 đến 190.
+
+CHUYỂN ĐỔI MLP NHẬN DẠNG MNIST
+
+- Keras Flatten được thay bằng torch.nn.Flatten.
+- Keras Dense(units=512, activation='relu') được thay bằng
+  torch.nn.Linear(784, 512) + torch.nn.ReLU.
+- Keras Dense(units=512, activation='relu') được thay bằng
+  torch.nn.Linear(512, 512) + torch.nn.ReLU.
+- Keras Dropout(rate=0.2) được thay bằng torch.nn.Dropout(p=0.2).
+- Keras Dense(units=10, activation='softmax') được thay bằng
+  torch.nn.Linear(512, 10) để trả logits.
+- Keras categorical_crossentropy được thay bằng CrossEntropyLoss.
+- Keras to_categorical được bỏ do PyTorch CrossEntropyLoss nhận nhãn integer.
+- Keras model.summary được thay bằng print(model) trong PyTorch.
+- Keras test và random prediction được thay bằng DataLoader và vòng lặp
+  torch.no_grad() để đánh giá và dự đoán.
+
+KIẾN TRÚC GIỮ NGUYÊN
+
+- Flatten: 28 x 28 -> 784
+- Dense/Linear: 784 -> 512
+- ReLU
+- Dropout: 0.2
+- Dense/Linear: 512 -> 512
+- ReLU
+- Dropout: 0.2
+- Dense/Linear: 512 -> 10
+- SGD learning rate: 0.01
+- Batch size: 128
+- Số epoch: 30
+
+KẾT QUẢ MNIST
+
+- Notebook Keras:
+  train accuracy đạt 0.9612, test accuracy đạt 0.9648,
+  test loss đạt 0.1143.
+- Notebook PyTorch:
+  train accuracy đạt 0.9532, test accuracy đạt 0.9562,
+  test loss đạt 0.1423.
+- Hai notebook có kiến trúc và siêu tham số tương đương.
+  Sai lệch kết quả có thể do random seed, thứ tự shuffle và môi trường chạy.
+
+CHẠY
+
+Từ thư mục gốc repo:
+
+  python -m pip install tensorflow torch torchvision scipy matplotlib numpy
+
+Mở notebook Func_apxm_MLP.ipynb để chạy bài toán xấp xỉ hàm Gauss bằng PyTorch.
+
+Mở notebook MNIST_MLP.ipynb để chạy bài toán phân loại chữ số MNIST bằng PyTorch.
