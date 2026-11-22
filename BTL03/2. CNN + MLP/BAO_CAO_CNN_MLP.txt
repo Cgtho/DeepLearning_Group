@@ -1,0 +1,24 @@
+BÁO CÁO CHUYỂN ĐỔI CNN + MLP SANG PYTORCH
+
+CHUYỂN ĐỔI
+- Keras Conv2D NHWC được thay bằng torch.nn.Conv2d NCHW.
+- MaxPooling2D, Flatten, Dense và Dropout được thay bằng các lớp torch.nn.
+- Không cần Softmax/one-hot label khi train: model trả logits và
+  CrossEntropyLoss nhận label số nguyên.
+- MNIST ToTensor chuẩn hóa pixel về [0, 1], tương đương chia float32 cho 255.
+- Keras model.fit/callbacks được thay bằng PyTorch training loop và shared
+  helpers. Checkpoint chỉ lưu state_dict có validation loss tốt nhất.
+- Validation được tách từ train; test chỉ đánh giá sau khi chọn checkpoint.
+  Cách này tránh dùng test set để chọn model như ví dụ Keras ban đầu.
+- Giữ nguyên ý tưởng mạng CNN 64/128/256, 3 lần pooling, MLP 512/512/10,
+  Dropout 0.2, SGD learning rate 0.01, batch size 128 và tối đa 30 epochs.
+
+CHẠY
+Từ thư mục gốc repo:
+  python -m pip install -r BTL03/requirements.txt
+  python -m unittest discover -s "BTL03/4. Training Utilities" -p "test_*.py" -v
+
+Mở notebook BTL03/2. CNN + MLP/1_MNIST_CNN.ipynb và Run All. MNIST được tải
+vào BTL03/2. CNN + MLP/data; kết quả, checkpoint và TensorBoard log vào
+BTL03/2. CNN + MLP/results và BTL03/2. CNN + MLP/runs.
+
