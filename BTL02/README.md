@@ -41,28 +41,5 @@ Khi tạo thí nghiệm mới, giữ nguyên split, seed, augmentation, optimize
 | Experiment | Model | Val loss | Val accuracy | Test macro F1 | Parameters | Thời gian |
 |---|---|---:|---:|---:|---:|---:|
 | EXP001_Baseline | `baseline` | | | | | |
-| EXP002_CNN_MLP | `cnn_mlp` | 1.198144 | 55.29% | 0.5200 | 5,355,015 | Resume: 2190.980 giây |
 
 Điền số liệu từ `training.json`, `history.csv` và `evaluation.json` sau khi hoàn tất baseline.
-
-
-## CNN + MLP và Training Utilities
-
-Mẫu `2. CNN + MLP/1_MNIST_CNN.ipynb` được chuyển sang PyTorch cho FER2013 tại
-`notebooks/03_cnn_mlp.ipynb`. Kiến trúc: Conv 64/128/256, pooling, dropout,
-MLP 512/512/7. Input 48×48; output logits, không Softmax trước CrossEntropyLoss.
-
-```powershell
-python -m pip install -r requirements.txt
-python train.py --config configs/cnn_mlp.yaml --smoke
-python train.py --config configs/cnn_mlp.yaml
-python evaluate.py results/EXP002_CNN_MLP/<run-timestamp>
-python -m tensorboard.main --logdir runs
-```
-
-`--smoke` chạy một epoch trên toàn bộ train/validation; không đánh giá test.
-Dữ liệu đặt tại `data/train.csv` và `data/test.csv`, thêm `fer2013.csv` nếu test thiếu nhãn.
-Checkpoint và kết quả cũ giữ nguyên. Các hàm dùng chung nằm trong `training_utils/`;
-import cũ từ `train` vẫn dùng được. EarlyStopping, ReduceLROnPlateau và augmentation
-được điều khiển bằng YAML, mặc định tắt khi so sánh với baseline. Muốn thử, sao chép
-config với tên experiment mới và thay một yếu tố mỗi lần.
