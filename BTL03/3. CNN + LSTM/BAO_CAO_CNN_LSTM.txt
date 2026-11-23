@@ -2,38 +2,93 @@ BÁO CÁO CHUYỂN ĐỔI CNN + LSTM SANG PYTORCH
 
 CHUYỂN ĐỔI
 
-- Keras Conv2D NHWC được thay bằng torch.nn.Conv2d NCHW.
-- Keras TimeDistributed(Conv2D/Pool/Flatten) được thay bằng reshape
+- Keras Conv2D ở định dạng NHWC được thay bằng torch.nn.Conv2d ở định dạng NCHW.
+- Keras TimeDistributed(Conv2D/Pool/Flatten) được mô phỏng bằng cách reshape
   `(batch, time, channel, height, width)` thành
-  `(batch*time, channel, height, width)` trước khi chạy CNN.
-- Keras Conv2D, MaxPooling2D, Flatten, Dense và Dropout được thay bằng
-  torch.nn.Conv2d, torch.nn.MaxPool2d, torch.nn.Flatten,
-  torch.nn.Linear và torch.nn.Dropout.
-- Keras LSTM được thay bằng torch.nn.LSTM với batch_first=True.
+  `(batch*time, channel, height, width)` trước khi đưa dữ liệu qua CNN.
+- Sau khối CNN, dữ liệu được reshape lại thành `(batch, time, features)`
+  để đưa vào torch.nn.LSTM.
 - Keras model.fit được thay bằng training loop:
   model.train(), optimizer.zero_grad(), forward, backward và optimizer.step().
 - Keras model.evaluate được thay bằng model.eval() kết hợp torch.no_grad().
 - Keras mean_absolute_error được thay bằng torch.nn.L1Loss.
 - MNIST được chia cho 255 để chuẩn hóa pixel về `[0, 1]`.
+- PyTorch nhận diện thiết bị bằng:
+  device = torch.device("cuda" if torch.cuda.is_available() else "cpu").
+  Trong môi trường chạy hiện tại, thiết bị là CPU.
 
-KIẾN TRÚC GIỮ NGUYÊN
+KIẾN TRÚC PYTORCH HIỆN TẠI
 
-- Input: `(batch, 8, 1, 28, 28)`
-- Conv2d: 1 -> 64 -> 128 -> 256
-- MaxPool2d sau mỗi khối CNN
-- Flatten sau CNN: 256 x 3 x 3 = 2304
-- LSTM: 2304 -> 128
-- LSTM: 128 -> 128
-- Dropout: 0.2 cho CNN và 0.22 cho LSTM
-- Linear: 128 -> 1
-- Batch size: 128
-- SGD learning rate: 0.01
+Mô hình PyTorch là một phiên bản thu gọn để phù hợp tài nguyên máy:
+
+- Input: `(batch, 8, 1, 28, 28)`.
+- CNN: Conv2d 1 -> 32 -> 64 -> 128.
+- 3 lớp MaxPool2d giảm kích thước ảnh 28 x 28 lần lượt xuống 14 x 14,
+  7 x 7 và 3 x 3.
+- Flatten sau CNN: 128 x 3 x 3 = 1152 đặc trưng.
+- LSTM: 1152 -> 64, batch_first=True.
+- Dropout CNN: 0.2 cho mỗi khối.
+- Dropout LSTM: 0.22.
+- Linear: 64 -> 1.
+- Batch size: 32 để giảm bộ nhớ đỉnh và tăng tính ổn định trên CPU.
+- SGD learning rate: 0.01.
+- Hiện chạy thử 5 epoch để kiểm tra mô hình và tìm vấn đề tài nguyên.
+- Tổng số tham số huấn luyện: 404545.
+
+LÝ DO GIẢM MÔ HÌNH SO VỚI BẢN KERAS
+
+Bản Keras gốc sử dụng CNN 64 -> 128 -> 256, hai LSTM 128 -> 128
+và nhiều hơn 1.7 triệu tham số. Bản PyTorch thu gọn có 404545 tham số,
+tương ứng CNN 32 -> 64 -> 128 và một LSTM 64.
+
+Việc giảm mô hình được thực hiện do các nguyên nhân thực tế sau:
+
+- Môi trường chạy notebook đang sử dụng CPU, không có CUDA/GPU:
+  torch.cuda.is_available() trả về False.
+- Mô hình CNN + LSTM kết hợp 8 ảnh cho mỗi mẫu; batch càng lớn thì lượng
+  tensor tính toán, activation và gradient tạm thời càng lớn.
+- Bản PyTorch ban đầu crash kernel khi đánh giá do hai bản runtime
+  libiomp5md.dll được nạp đồng thời. Notebook đã đặt biến môi trường OpenMP
+  để tránh lỗi OMP: Error #15 và giới hạn số CPU thread.
+- Batch size được giảm từ 128 xuống 32 để tránh OOM/crash và ổn định kernel
+  CPU. Tuy nhiên, batch nhỏ làm mỗi epoch có nhiều bước cập nhật hơn,
+  do đó thời gian huấn luyện có thể tăng.
+- Kết quả chạy thử 5 epoch trên CPU mất khoảng 40.9459 phút. Tại tốc độ này,
+  chạy đủ 30 epoch sẽ mất rất lâu nên chỉ chạy 5 epoch để kiểm tra chuyển đổi.
+- Bản gốc Keras đã được chạy trong điều kiện không gian tài nguyên và phần cứng
+  khác, với batch 128 và 30 epoch. Vì kiến trúc Keras và PyTorch hiện tại
+  khác nhau nên kết quả giữa hai framework không dùng để khẳng định tương đương
+  mô hình.
+
+KẾT QUẢ KIỂM TRA 5 EPOCH
+
+- Epoch 1: train MAE 5.5379, validation MAE 3.1113.
+- Epoch 2: train MAE 2.5651, validation MAE 2.2701.
+- Epoch 3: train MAE 1.9520, validation MAE 1.3468.
+- Epoch 4: train MAE 1.6972, validation MAE 1.1030.
+- Epoch 5: train MAE 1.5585, validation MAE 1.0259.
+- Tổng thời gian huấn luyện 5 epoch: 40.9459 phút trên CPU.
+
+DỮ LIỆU
+
+MNIST được tải tự động nhờ torchvision.datasets.MNIST với:
+
+  root="./data", download=True
+
+Thư mục máy lưu:
+
+  data/MNIST/raw/
+
+Mỗi ví dụ huấn luyện là chuỗi tối đa 8 ảnh MNIST. Số lượng ảnh thực tế
+trong chuỗi được sinh ngẫu nhiên theo seed đã đặt, và target là tổng nhãn
+của các ảnh trong chuỗi. Trường dữ liệu này được tạo trong RAM; thư mục
+data/MNIST chỉ chứa dữ liệu MNIST gốc đã tải.
 
 CHẠY
-CHẠY
 
-Từ thư mục gốc repo:
+Từ thư mục repo:
 
-  python -m pip install tensorflow torch torchvision matplotlib numpy
+  python -m pip install torch torchvision matplotlib numpy
 
-Mở notebook MNIST_CNN_LSTM.ipynb để chạy mã PyTorch.
+Mở notebook MNIST_CNN_LSTM.ipynb và chạy tuần tự các cell.
+Nếu kernel gặp lỗi OpenMP, khởi động lại kernel trước khi chạy lại.
