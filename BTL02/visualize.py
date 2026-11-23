@@ -17,8 +17,8 @@ def plot_results(run, model, dataset, truth, predicted, result, split="test"):
     best_epoch = history.loc[history.val_loss.idxmin(), "epoch"]
     for metric, title in [("loss", "Cross-entropy"), ("accuracy", "Accuracy")]:
         fig, ax = plt.subplots(figsize=(7, 4))
-        for split, name in [("train", "Training"), ("val", "Validation")]:
-            ax.plot(history.epoch, history[f"{split}_{metric}"], label=name)
+        for phase, name in [("train", "Training"), ("val", "Validation")]:
+            ax.plot(history.epoch, history[f"{phase}_{metric}"], label=name)
         ax.axvline(best_epoch, color="gray", ls=":", label=f"Checkpoint · epoch {best_epoch}")
         ax.set(xlabel="Epoch", ylabel=title)
         ax.legend()
