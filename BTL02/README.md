@@ -32,7 +32,13 @@ Lượt chạy lưu cấu hình, `history.csv`, `training.json` và `best.pth` v
 python evaluate.py results/EXP001_Baseline/<run-timestamp>
 ```
 
-Lệnh đánh giá ghi `evaluation.json` và các hình phân tích vào cùng thư mục run. Thay `<run-timestamp>` bằng tên thư mục thực tế.
+Lệnh đánh giá trên test cần `emotion` trong `test.csv` hoặc `fer2013.csv` để đối chiếu nhãn. Nếu test không có nhãn và thiếu file gốc, đánh giá validation bằng:
+
+```powershell
+python evaluate.py results/EXP001_Baseline/<run-timestamp> --split validation
+```
+
+Lệnh đánh giá ghi `evaluation.json` và các hình phân tích vào cùng thư mục run. Thay `<run-timestamp>` bằng tên thư mục thực tế. Kết quả validation và test được ghi nhãn riêng.
 
 ## Quy tắc so sánh
 

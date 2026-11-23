@@ -12,7 +12,7 @@ def save_figure(fig, run, name):
     plt.close(fig)
 
 
-def plot_results(run, model, dataset, truth, predicted, result):
+def plot_results(run, model, dataset, truth, predicted, result, split="test"):
     history = pd.read_csv(run / "history.csv")
     best_epoch = history.loc[history.val_loss.idxmin(), "epoch"]
     for metric, title in [("loss", "Cross-entropy"), ("accuracy", "Accuracy")]:
@@ -28,12 +28,13 @@ def plot_results(run, model, dataset, truth, predicted, result):
     ConfusionMatrixDisplay(np.array(result["confusion_matrix"]), display_labels=EMOTIONS).plot(
         ax=ax, values_format="d", cmap="Blues", colorbar=False, xticks_rotation=35
     )
-    ax.set(xlabel="Nhãn dự đoán", ylabel="Nhãn thực tế", title="Ma trận nhầm lẫn trên tập test")
+    ax.set(xlabel="Nhãn dự đoán", ylabel="Nhãn thực tế",
+           title=f"Ma trận nhầm lẫn trên tập {split}")
     save_figure(fig, run, "confusion_matrix.png")
 
     fig, ax = plt.subplots(figsize=(8, 4))
     pd.DataFrame(result["per_class"]).T[["precision", "recall", "f1-score"]].plot.bar(ax=ax, rot=0)
-    ax.set(ylim=(0, 1), ylabel="Điểm", title="Kết quả theo biểu cảm trên tập test")
+    ax.set(ylim=(0, 1), ylabel="Điểm", title=f"Kết quả theo biểu cảm trên tập {split}")
     save_figure(fig, run, "per_class.png")
 
     # Lấy mẫu tái lập trực tiếp theo chỉ số trong test.csv.

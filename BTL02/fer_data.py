@@ -65,8 +65,15 @@ def test_loader(data_dir, batch_size):
     test = pd.read_csv(data_dir / "test.csv")
     if "emotion" not in test:
         # Chỉ lấy nhãn khi toàn bộ ảnh và thứ tự khớp với phần test của bản gốc.
+        reference_path = data_dir / "fer2013.csv"
+        if not reference_path.is_file():
+            raise FileNotFoundError(
+                "test.csv không có cột emotion và thiếu fer2013.csv để khôi phục nhãn. "
+                "Hãy dùng --split validation để đánh giá trên tập validation có nhãn, "
+                "hoặc đặt fer2013.csv vào thư mục data để đánh giá test."
+            )
         pieces = []
-        for chunk in pd.read_csv(data_dir / "fer2013.csv", chunksize=2048):
+        for chunk in pd.read_csv(reference_path, chunksize=2048):
             pieces.append(chunk.loc[chunk["Usage"].isin(["PublicTest", "PrivateTest"])])
         reference = pd.concat(pieces, ignore_index=True)
         if not test["pixels"].equals(reference["pixels"]):
