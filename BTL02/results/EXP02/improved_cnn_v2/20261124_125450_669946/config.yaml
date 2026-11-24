@@ -1,0 +1,10 @@
+experiment: EXP002_Improved_V2
+model: improved_cnn_v2
+data_dir: data
+output_dir: results
+tensorboard_dir: runs
+epochs: 30
+batch_size: 64
+learning_rate: 0.001
+seed: 42
+device: auto

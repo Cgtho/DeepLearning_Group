@@ -105,7 +105,13 @@ def run_experiment(config_path=DEFAULT_CONFIG, epochs=None, smoke=False, model=N
     optimizer = torch.optim.Adam(model.parameters(), lr=cfg["learning_rate"])
     criterion = nn.CrossEntropyLoss()
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-    run = ROOT / cfg["output_dir"] / cfg["experiment"] / (stamp + ("_smoke" if smoke else ""))
+    run_name = stamp + ("_smoke" if smoke else "")
+    result_dir = ROOT / cfg["output_dir"]
+    if result_group := cfg.get("result_group"):
+        result_dir = result_dir / result_group / model_name
+    else:
+        result_dir = result_dir / cfg["experiment"]
+    run = result_dir / run_name
     run.mkdir(parents=True, exist_ok=False)
     (run / "config.yaml").write_text(yaml.safe_dump(cfg, sort_keys=False), encoding="utf-8")
 
@@ -116,7 +122,6 @@ def run_experiment(config_path=DEFAULT_CONFIG, epochs=None, smoke=False, model=N
             "Thiếu TensorBoard. Cài bằng: pip install tensorboard"
         ) from exc
 
-    run_name = stamp + ("_smoke" if smoke else "")
     tensorboard_run = ROOT / cfg.get("tensorboard_dir", "runs") / cfg["experiment"] / run_name
     tensorboard_run.mkdir(parents=True, exist_ok=True)
     writer = SummaryWriter(log_dir=str(tensorboard_run))

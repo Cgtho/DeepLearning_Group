@@ -5,11 +5,11 @@ Project CNN phân loại 7 cảm xúc từ ảnh grayscale 48×48 bằng PyTorch
 ## Cấu trúc
 
 - `data/`: `train.csv` và `test.csv` (dữ liệu cục bộ, không commit).
-- `models/`: kiến trúc baseline hiện tại.
-- `configs/`: cấu hình baseline; tạo config mới khi bắt đầu thí nghiệm.
+- `models/`: kiến trúc của từng thí nghiệm.
+- `configs/`: cấu hình của từng thí nghiệm.
 - `train.py`, `evaluate.py`: huấn luyện và đánh giá checkpoint.
 - `notebooks/`: khám phá dữ liệu và trình bày kết quả.
-- `results/<experiment>/<run>/`: checkpoint, config đã dùng và lịch sử train.
+- `results/`: checkpoint, config đã dùng và lịch sử train.
 - `runs/<experiment>/<run>/`: log TensorBoard.
 
 ## Chạy baseline
@@ -39,6 +39,16 @@ python evaluate.py results/EXP001_Baseline/<run-timestamp> --split validation
 ```
 
 Lệnh đánh giá ghi `evaluation.json` và các hình phân tích vào cùng thư mục run. Thay `<run-timestamp>` bằng tên thư mục thực tế. Kết quả validation và test được ghi nhãn riêng.
+
+## EXP02 · Tăng số lớp Convolution
+
+Mở `notebooks/03_exp02_more_convolution.ipynb` và chạy lần lượt các ô. Notebook
+so sánh baseline 3 lớp với DeeperCNN 4 lớp, Improved V2 6 lớp và Improved V3 8
+lớp. Các kiến trúc EXP02 nằm trong `models/exp02_more_convolution/`.
+Kết quả các lượt chạy mới nằm trong `results/EXP02/<model>/<run>/`.
+Điền đường dẫn của từng lượt đã hoàn tất vào `RUN_DIRS` để dùng lại checkpoint
+và lịch sử huấn luyện. Sau khi chọn mô hình theo validation loss, đặt
+`TEST_VARIANT` thành tên biến thể đã chọn để đánh giá trên test.
 
 ## Quy tắc so sánh
 
