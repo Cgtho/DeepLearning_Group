@@ -1,0 +1,123 @@
+BAO CAO CHUYEN MO HINH NHAN DIEN GIOI TINH TU KERAS SANG PYTORCH
+
+1. Muc dich va du lieu
+
+Notebook goc chuyen doi xu ly bai toan phan loai anh khuon mat thanh hai lop:
+- Lop 0: female (nu).
+- Lop 1: male (nam).
+
+Anh dau vao la anh muc xam kich thuoc 64 x 64. Du lieu duoc luu trong bon tep NumPy:
+- 64_64_11938_4098_train_x_onehot.npy: anh train, kich thuoc (11938, 64, 64, 1).
+- 64_64_11938_4098_train_y_onehot.npy: nhan train one-hot, kich thuoc (11938, 2).
+- 64_64_5968_4098_val_x_onehot.npy: anh validation, kich thuoc (5968, 64, 64, 1).
+- 64_64_5968_4098_val_y_onehot.npy: nhan validation one-hot, kich thuoc (5968, 2).
+
+Gia tri pixel nam trong khoang tu 0 den 255 va duoc giu nguyen nhu du lieu goc. Trong ban PyTorch, cac anh duoc chuyen sang dinh dang [N, 1, 64, 64], trong do N la kich thuoc batch, 1 la mot kenh anh muc xam, 64 va 64 la chieu cao va chieu rong. Nhan one-hot duoc chuyen thanh chi so lop bang argmax(axis=1), sau do thanh torch.long de su dung voi CrossEntropyLoss.
+
+2. So sanh cac thanh phan Keras va PyTorch
+
+Theo mo hinh va cac notebook da co trong du an BTL03, bang sau tong hop phep chuyen doi:
+
+Thanh phan Keras                        Thanh phan PyTorch
+---------------------------------------------------------------------------
+Input shape (64, 64, 1), layout NHWC     Tensor (batch, 1, 64, 64), layout NCHW
+Conv2D kernel 3 x 3, padding="same"      nn.Conv2d kernel_size=3, padding=1
+ReLU                                     torch.relu hoac nn.ReLU
+MaxPooling2D 2 x 2                       nn.MaxPool2d(kernel_size=2, stride=2)
+Dropout 0.2                              nn.Dropout(0.2)
+Flatten                                  nn.Flatten()
+Dense(1024, activation="relu")           nn.Linear(..., 1024), roi torch.relu
+Dense(2, activation="softmax")           nn.Linear(..., 2), tra ve logits
+categorical_crossentropy                 nn.CrossEntropyLoss
+Adam learning rate 0.0001                torch.optim.Adam(..., lr=0.0001)
+model.fit()                              Vong lap PyTorch dung DataLoader
+model.evaluate()                         Forward pass trong torch.inference_mode()
+
+3. Chuyen kien truc CNN + MLP
+
+Mo hinh PyTorch HumanGenderCNNMLP giu kich thuoc va so luong lop cua mo hinh Keras:
+
+Khoi 1:
+- Conv2d(1, 16), Conv2d(16, 16), MaxPool2d, Dropout 0.2.
+- Khong gian anh giam tu 64 x 64 xuat 32 x 32.
+
+Khoi 2:
+- Ba Conv2d(32, 32), MaxPool2d, Dropout 0.2.
+- Kich thuoc 32 x 32 giam con 16 x 16.
+
+Khoi 3:
+- Ba Conv2d(64, 64), MaxPool2d, Dropout 0.2.
+- Kich thuoc 16 x 16 giam con 8 x 8.
+
+Khoi 4:
+- Ba Conv2d(128, 128), MaxPool2d, Dropout 0.2.
+- Kich thuoc 8 x 8 giam con 4 x 4.
+
+Khoi 5:
+- Ba Conv2d(256, 256), MaxPool2d, Dropout 0.2.
+- Kich thuoc 4 x 4 giam con 2 x 2.
+
+Sau Flatten, tensor cuoi cung co:
+256 * 2 * 2 = 1024 dac trung.
+Lop nn.Linear(1024, 1024) ket hop ReLU va dropout.
+Lop nn.Linear(1024, 1024) ket hop ReLU va dropout.
+Lop cuoi nn.Linear(1024, 2) tra ve hai logits de phan loai female/male.
+
+Mo hinh co 4.063.570 tham so co the hoc, khop voi tong tham so 4.063.570 trong mo hinh Keras goc.
+
+4. Chuyen vong lap huan luyen
+
+Trong Keras, model.compile() thiet lap optimizer, loss va metric. model.fit() thuc hien toan bo quyen cap nhat va ghi lich su huan luyen. Trong PyTorch, cac buoc nay duoc chia ra ro rang:
+
+1. model.train() bat che do huan luyen va kich hoat Dropout.
+2. optimizer.zero_grad(set_to_none=True) xoa gradient cu.
+3. forward pass tao logits.
+4. nn.CrossEntropyLoss tinh loss tu logits va chi so lop.
+5. loss.backward() tinh gradient.
+6. optimizer.step() cap nhat trong so.
+
+Phan danh gia dung model.eval(), torch.inference_mode(), batch giam day du va khong tinh gradient. Moi bat luu so mau nhan dung, tong loss va tong so du doan dung. Cuoi moi epoch, loss va accuracy duoc tinh tren toan bo tap validation.
+
+Ma huan luyen dung batch size 128, Adam learning rate 0.0001 va toi da 30 epoch. Validation dung batch size nho hon de giam tai bo nho CPU/GPU. Checkpoint co val_loss tot nhat duoc luu vao tep human_gender_best.pth.
+
+5. Chuyen nhan va du doan
+
+Voi nhan one-hot, vi du [1, 0] thanh female va [0, 1] thanh male sau khi argmax. Du doan mot anh khong dung softmax rieng trong forward. Mo hinh tra ve hai logits, argmax(dim=1) chon lop co diem cao nhat.
+
+Vo i mot anh test:
+- unsqueeze(0) chuyen anh tu [1, 64, 64] thanh [1, 1, 64, 64].
+- model.eval() tat Dropout.
+- torch.inference_mode() khong luu gradient.
+- argmax(dim=1) lay chi so lop du doan.
+- Ham int2gender chuyen chi so thanh chuoi female hoac male.
+
+6. Ket qua huan luyen da co
+
+Mot lan chay da hoan thanh 30 epoch tren CPU trong khoang 51,5542 phut. Cac chi so cua epoch tot nhat tren validation la:
+- Epoch validation loss thap nhat: epoch 22.
+- Validation loss: 0.4046.
+- Validation accuracy: 84.00%.
+
+Khi danh gia lai tren toan bo tap val, ket qua da ghi nhan la:
+- Test loss: 0.40457952501946415.
+- Test accuracy: 0.8399798927613941, tuong duong 83.997989%.
+
+Cac ket qua tren chi la ket qua cua mot lan chay cu the. De tai lap ket qua, can chay lai notebook voi cung seed va cung thiet lap phan cung. Seed hien tai la 42.
+
+7. Ket noi voi cac tai lieu da co trong du an
+
+Bao cao nay tham khao cac mau chuyen doi trong BTL03:
+- Bao_cao_chuyen_Keras_sang_PyTorch.md trong thu muc 2. CNN + MLP mo ta cach chuyen CNN 48 x 48 nhan dien bieu cam.
+- Bao_cao_chuyen_Keras_sang_PyTorch.md trong thu muc 4. Training Utilities mo ta luong du lieu, huan luyen, early stopping va run_epoch.
+- Notebook 1_MNIST_CNN.ipynb cho thay cach dung torch.nn, TensorDataset, DataLoader, Adam/CrossEntropyLoss va NCHW.
+- Notebook 3_Emotion_Reg_CNN.ipynb cho thay cach doc du lieu one-hot, chuyen nhan bang argmax, dung logits va torch.inference_mode().
+- Tep shared_training.py cung cap run_epoch va fit de dinh nghia vong lap huan luyen dung chung. Ban goc nhan dien gioi tinh hien dung vong lap noi bo de de doc theo cau truc code duoc chuyen truc tiep tu Keras.
+
+8. Cac diem can luu y
+
+- Keras dung NHWC, trong khi PyTorch dung NCHW.
+- CrossEntropyLoss phai nhan nhan chi so lop, khong duoc nhan nhan one-hot.
+- Dropout chi hoat dong trong model.train(), khong hoat dong trong model.eval().
+- Batch size danh gia nho ho tro giam tai bo nho.
+- Trong moi truong Windows va Anaconda, mo phong loi xung dot OpenMP co the xay ra giua nhieu ban cua libiomp5md.dll. Notebook dat cac bien OMP_NUM_THREADS=2, MKL_NUM_THREADS=2 va KMP_DUPLICATE_LIB_OK=TRUE truoc khi import PyTorch/NumPy de giam xung dot kernel.
+- Nen restart kernel truoc khi chay lai notebook tu dau de tranh giu lai ten bien, optimizer va bo nho tu lan chay truoc.
