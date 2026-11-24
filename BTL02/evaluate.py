@@ -56,7 +56,8 @@ def evaluate_checkpoint(run, data_dir, batch_size, device, model_template=None, 
     }
     plot_results(run, model, loader.dataset, truth, predicted, result, split=split)
     (run / "evaluation.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
-    print(f"Test accuracy {result['accuracy']:.2%} | Macro F1 {result['macro_f1']:.4f}")
+    split_label = "Test" if split == "test" else "Validation"
+    print(f"{split_label} accuracy {result['accuracy']:.2%} | Macro F1 {result['macro_f1']:.4f}")
     return result
 
 
