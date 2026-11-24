@@ -1,0 +1,11 @@
+experiment: EXP003_Deeper_CNN_BN
+model: deeper_cnn_bn
+data_dir: data
+output_dir: results
+result_group: EXP03
+tensorboard_dir: runs
+epochs: 30
+batch_size: 64
+learning_rate: 0.001
+seed: 42
+device: auto

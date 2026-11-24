@@ -1,0 +1,27 @@
+{
+  "training_seconds": 1613.4335739,
+  "parameters": 683879,
+  "model": "baseline_bn",
+  "train_size": 22967,
+  "val_size": 5742,
+  "best_epoch": 4,
+  "best_val_loss": 1.1619540452957153,
+  "device": "cpu",
+  "torch": "2.14.0+cpu",
+  "hardware": "CPU",
+  "preflight": {
+    "input": [
+      64,
+      1,
+      48,
+      48
+    ],
+    "output": [
+      64,
+      7
+    ],
+    "loss": 2.0075325965881348,
+    "finite_gradients": true
+  },
+  "smoke": false
+}
