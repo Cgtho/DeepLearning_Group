@@ -1,0 +1,27 @@
+{
+  "training_seconds": 265.06776700000046,
+  "parameters": 1468711,
+  "model": "improved_cnn_v3_bn",
+  "train_size": 22967,
+  "val_size": 5742,
+  "best_epoch": 4,
+  "best_val_loss": 1.038762092590332,
+  "device": "cuda",
+  "torch": "2.11.0",
+  "hardware": "NVIDIA GeForce RTX 3050 Laptop GPU",
+  "preflight": {
+    "input": [
+      64,
+      1,
+      48,
+      48
+    ],
+    "output": [
+      64,
+      7
+    ],
+    "loss": 1.9533812999725342,
+    "finite_gradients": true
+  },
+  "smoke": false
+}
