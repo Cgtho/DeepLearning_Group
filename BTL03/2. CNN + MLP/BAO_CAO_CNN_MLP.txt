@@ -1,24 +1,49 @@
 BÁO CÁO CHUYỂN ĐỔI CNN + MLP SANG PYTORCH
 
-CHUYỂN ĐỔI
-- Keras Conv2D NHWC được thay bằng torch.nn.Conv2d NCHW.
-- MaxPooling2D, Flatten, Dense và Dropout được thay bằng các lớp torch.nn.
-- Không cần Softmax/one-hot label khi train: model trả logits và
-  CrossEntropyLoss nhận label số nguyên.
-- MNIST ToTensor chuẩn hóa pixel về [0, 1], tương đương chia float32 cho 255.
-- Keras model.fit/callbacks được thay bằng PyTorch training loop và shared
-  helpers. Checkpoint chỉ lưu state_dict có validation loss tốt nhất.
-- Validation được tách từ train; test chỉ đánh giá sau khi chọn checkpoint.
-  Cách này tránh dùng test set để chọn model như ví dụ Keras ban đầu.
-- Giữ nguyên ý tưởng mạng CNN 64/128/256, 3 lần pooling, MLP 512/512/10,
-  Dropout 0.2, SGD learning rate 0.01, batch size 128 và tối đa 30 epochs.
+1. DỮ LIỆU
+- Notebook đọc kho MNIST từ tệp mnist.npz đặt cùng thư mục với notebook.
+  Kho gồm 60.000 ảnh huấn luyện và 10.000 ảnh test, mỗi ảnh kích thước 28x28,
+  ảnh xám và nhãn chữ số từ 0 đến 9.
+- Ảnh được chuyển sang tensor float32 theo định dạng NCHW (N, 1, 28, 28) và
+  chuẩn hóa pixel về [0, 1] bằng cách chia cho 255. Nhãn được giữ dạng số
+  nguyên để dùng với CrossEntropyLoss.
+- Lưu ý: notebook dùng cùng tập test 10.000 ảnh làm validation để chọn
+  checkpoint, sau đó đánh giá lại trên chính tập này. Vì vậy kết quả test
+  không phải kết quả trên một tập held-out độc lập.
 
-CHẠY
-Từ thư mục gốc repo:
+2. MÔ HÌNH
+- Chuyển Conv2D NHWC của Keras sang nn.Conv2d NCHW của PyTorch; MaxPooling2D,
+  Flatten, Dense và Dropout được thay bằng các lớp PyTorch tương ứng.
+- CNN gồm 3 khối convolution với 64, 128 và 256 kênh. Mỗi khối dùng kernel
+  3x3, padding 1 và max pooling 2x2; dropout 0.2 được áp dụng sau các lớp
+  pooling.
+- Phần MLP có hai lớp ẩn kích thước 512 và 512, dropout 0.2, và lớp đầu ra
+  10 logits. Sau ba lần pooling, kích thước đặc trưng đầu vào MLP là
+  256 x 3 x 3.
+- Không áp dụng softmax trước khi tính loss: CrossEntropyLoss nhận logits và
+  nhãn số nguyên.
+
+3. HUẤN LUYỆN VÀ ĐÁNH GIÁ
+- Sử dụng các hàm chia sẻ trong 4. Training Utilities: seed có thể lặp lại,
+  vòng lặp train/validation, tính loss và accuracy theo số mẫu, lưu checkpoint
+  có validation loss tốt nhất và phục hồi checkpoint tốt nhất.
+- Cấu hình: SGD, learning rate ban đầu 0.01, batch size 128, tối đa 30 epochs.
+  ReduceLROnPlateau giảm learning rate theo validation loss (factor 0.1,
+  patience 2, min_lr 0.0001); early stopping dùng patience 7.
+- Mỗi lần chạy tạo thư mục kết quả theo timestamp. Trong đó lưu best.pth,
+  history.csv, training.json và evaluation.json; TensorBoard scalars được ghi
+  vào thư mục runs có cùng timestamp.
+- Notebook còn hiển thị loss/accuracy theo epoch, dự đoán một ảnh test, các
+  bộ lọc đã học của convolution đầu tiên và ba biểu đồ PCA (pixel đầu vào,
+  đặc trưng FC2 và đặc trưng global-average-pooling). PCA mặc định lấy tối đa
+  3.000 ảnh train; có thể bỏ qua bằng cách đặt RUN_PCA = False.
+
+4. HƯỚNG DẪN CHẠY
+Từ thư mục gốc repository:
   python -m pip install -r BTL03/requirements.txt
   python -m unittest discover -s "BTL03/4. Training Utilities" -p "test_*.py" -v
 
-Mở notebook BTL03/2. CNN + MLP/1_MNIST_CNN.ipynb và Run All. MNIST được tải
-vào BTL03/2. CNN + MLP/data; kết quả, checkpoint và TensorBoard log vào
-BTL03/2. CNN + MLP/results và BTL03/2. CNN + MLP/runs.
-
+Đặt mnist.npz trong BTL03/2. CNN + MLP/, mở notebook
+BTL03/2. CNN + MLP/1_MNIST_CNN.ipynb và chọn Run All. Notebook mặc định bật
+huấn luyện (RUN_TRAINING = True) và PCA (RUN_PCA = True). Tệp mnist.npz phải
+có sẵn; notebook không tự tải kho MNIST.
