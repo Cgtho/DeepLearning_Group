@@ -10,6 +10,7 @@ from models.exp03_batch_normalization.batch_norm_cnn import (
     ImprovedCNNV2BN,
     ImprovedCNNV3BN,
 )
+from models.exp05_dropout.dropout_cnn import BaselineDropoutCNN
 
 MODEL_REGISTRY = {
     "baseline": BaselineCNN,
@@ -20,6 +21,7 @@ MODEL_REGISTRY = {
     "deeper_cnn_bn": DeeperCNNBN,
     "improved_cnn_v2_bn": ImprovedCNNV2BN,
     "improved_cnn_v3_bn": ImprovedCNNV3BN,
+    "baseline_dropout": BaselineDropoutCNN,
 }
 
 
