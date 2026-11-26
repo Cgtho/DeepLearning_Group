@@ -97,7 +97,9 @@ def run_experiment(config_path=DEFAULT_CONFIG, epochs=None, smoke=False, model=N
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
     data_dir = ROOT / cfg["data_dir"]
-    train, valid = training_loaders(data_dir, cfg["batch_size"], seed)
+    train, valid = training_loaders(
+        data_dir, cfg["batch_size"], seed, augmentation=cfg.get("augmentation")
+    )
     model_name = cfg.get("model", "baseline")
     preflight = check_batch(train.dataset, cfg["batch_size"], device, model, model_name)
     torch.manual_seed(seed)

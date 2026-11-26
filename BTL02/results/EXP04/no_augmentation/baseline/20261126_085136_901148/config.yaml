@@ -1,0 +1,11 @@
+experiment: EXP004_Data_Augmentation
+model: baseline
+data_dir: data
+output_dir: results
+result_group: EXP04/no_augmentation
+tensorboard_dir: runs
+epochs: 30
+batch_size: 64
+learning_rate: 0.001
+seed: 42
+device: cuda

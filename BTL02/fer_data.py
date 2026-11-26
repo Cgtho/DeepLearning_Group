@@ -42,21 +42,45 @@ def split_train_valid(df):
     )
 
 
-def make_dataset(frame):
+def make_dataset(frame, transform=None):
     labels = frame["emotion"].to_numpy()
     if not np.isin(labels, np.arange(7)).all():
         raise ValueError("FER2013 yêu cầu nhãn số nguyên từ 0 đến 6.")
     images = load_images(frame).astype(np.float32)
     images /= 255.0
-    return EmotionDataset(images, labels)
+    return EmotionDataset(images, labels, transform=transform)
 
 
-def training_loaders(data_dir, batch_size, seed):
+def build_augmentation_transform(augmentation):
+    if not augmentation:
+        return None
+
+    from torchvision import transforms
+
+    operations = []
+    rotation_degrees = augmentation.get("rotation_degrees", 0)
+    if rotation_degrees:
+        operations.append(transforms.RandomRotation(rotation_degrees))
+
+    translate = augmentation.get("translate")
+    if translate:
+        operations.append(transforms.RandomAffine(degrees=0, translate=tuple(translate)))
+
+    horizontal_flip_probability = augmentation.get("horizontal_flip_probability", 0)
+    if horizontal_flip_probability:
+        operations.append(transforms.RandomHorizontalFlip(p=horizontal_flip_probability))
+
+    return transforms.Compose(operations) if operations else None
+
+
+def training_loaders(data_dir, batch_size, seed, augmentation=None):
     frame = pd.read_csv(data_dir / "train.csv")
     train_idx, valid_idx = split_train_valid(frame)
     generator = torch.Generator().manual_seed(seed)
-    train = DataLoader(make_dataset(frame.iloc[train_idx]), batch_size=batch_size,
-                       shuffle=True, generator=generator)
+    train_dataset = make_dataset(
+        frame.iloc[train_idx], transform=build_augmentation_transform(augmentation)
+    )
+    train = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, generator=generator)
     valid = DataLoader(make_dataset(frame.iloc[valid_idx]), batch_size=batch_size)
     return train, valid
 
