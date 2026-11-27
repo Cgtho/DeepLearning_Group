@@ -9,7 +9,7 @@ Dự án phân loại 7 cảm xúc từ ảnh FER2013 grayscale 48 × 48 bằng 
 - `models/exp02_more_convolution/`: DeeperCNN, Improved V2 và Improved V3.
 - `models/exp03_batch_normalization/`: các kiến trúc BatchNorm của EXP03.
 - `models/exp05_dropout/`: baseline có Dropout ở lớp fully connected.
-- `configs/`: cấu hình baseline và các lượt EXP02, EXP03, EXP04, EXP05.
+- `configs/`: cấu hình baseline và các lượt EXP02–EXP06.
 - `train.py`, `fer_data.py`: pipeline huấn luyện và dữ liệu.
 - `evaluate.py`, `visualize.py`: đánh giá checkpoint, lưu metric và hình.
 - `notebooks/01_data_exploration.ipynb`: khám phá dữ liệu.
@@ -18,6 +18,7 @@ Dự án phân loại 7 cảm xúc từ ảnh FER2013 grayscale 48 × 48 bằng 
 - `notebooks/04_exp03_batch_normalization.ipynb`: so sánh BatchNorm trên validation.
 - `notebooks/05_exp04_data_augmentation.ipynb`: so sánh baseline có/không augmentation trên validation.
 - `notebooks/06_exp05_dropout.ipynb`: so sánh baseline có/không Dropout trên validation.
+- `notebooks/07_exp06_learning_rate.ipynb`: so sánh ba learning rate của Adam trên validation.
 - `results/<experiment>/<run>/`: checkpoint, cấu hình, lịch sử và kết quả đánh giá.
 - `runs/<experiment>/<run>/`: log TensorBoard.
 
@@ -91,6 +92,18 @@ python train.py --config configs/exp05_dropout.yaml
 ```
 
 Run đối chứng không Dropout dùng baseline không augmentation tại `results/EXP001_Baseline/20261120_122107_175923`. Notebook `06_exp05_dropout.ipynb` đánh giá cả hai trên validation rồi so sánh accuracy, macro F1, F1 từng lớp, confusion matrix và learning curves. Môi trường Python mặc định hiện không có CUDA; để so sánh thời gian công bằng, chạy cả hai cấu hình trên cùng một kernel/phần cứng.
+
+## EXP006: ảnh hưởng của learning rate
+
+EXP06 so sánh baseline CNN được huấn luyện bằng Adam với learning rate `0.0003`, `0.001` và `0.003`. Split 80/20, seed 42, batch size 64, 30 epoch, kiến trúc và các thiết lập khác được giữ nguyên; không dùng augmentation, BatchNorm hoặc Dropout. Cả ba config chọn `device: cuda` để dùng cùng GPU.
+
+```powershell
+python train.py --config configs/exp06_lr_0003.yaml
+python train.py --config configs/exp06_lr_001.yaml
+python train.py --config configs/exp06_lr_003.yaml
+```
+
+Notebook `07_exp06_learning_rate.ipynb` kiểm tra các biến kiểm soát, có thể chạy các lượt còn thiếu hoặc đọc lại các run đã hoàn thành, rồi so sánh validation loss, accuracy, macro F1, F1 từng lớp, confusion matrix và learning curves. Chỉ dùng validation để so sánh; không dùng test để chọn learning rate.
 
 ## Validation và test
 
