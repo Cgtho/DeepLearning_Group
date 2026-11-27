@@ -6,6 +6,14 @@ from sklearn.metrics import ConfusionMatrixDisplay
 from fer_data import EMOTIONS
 
 
+def display_saved_figures(run, width=680):
+    from IPython.display import Image, display
+
+    for path in sorted(run.glob("*.png")):
+        if path.is_file():
+            display(Image(filename=str(path), width=width))
+
+
 def save_figure(fig, run, name):
     fig.tight_layout()
     fig.savefig(run / name, dpi=150, bbox_inches="tight")
